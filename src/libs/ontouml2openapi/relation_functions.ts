@@ -1,7 +1,7 @@
 import { Relation } from '@libs/ontouml';
-import { Ontouml2Gufo, transformAnnotations } from './';
+import { Ontouml2Openapi, transformAnnotations } from './';
 
-export function transformRelation(transformer: Ontouml2Gufo, relation: Relation) {
+export function transformRelation(transformer: Ontouml2Openapi, relation: Relation) {
   if (relation.hasInstantiationStereotype()) {
     transformInstantiation(transformer, relation);
     return;
@@ -33,7 +33,7 @@ export function transformRelation(transformer: Ontouml2Gufo, relation: Relation)
   }
 }
 
-function writeBaseRelationAxioms(transformer: Ontouml2Gufo, relation: Relation) {
+function writeBaseRelationAxioms(transformer: Ontouml2Openapi, relation: Relation) {
   const relationUri = transformer.getUri(relation);
   transformer.addQuad(relationUri, 'rdf:type', 'owl:ObjectProperty');
 
@@ -85,7 +85,7 @@ export function getSuperProperty(relation: Relation): string {
   return getSuperPropertyFromStereotype(relation) || getPartWholeSuperProperty(relation);
 }
 
-function writeSubPropertyAxiom(transformer: Ontouml2Gufo, relation: Relation) {
+function writeSubPropertyAxiom(transformer: Ontouml2Openapi, relation: Relation) {
   let superProperty = getSuperProperty(relation);
 
   if (!superProperty) {
@@ -96,7 +96,7 @@ function writeSubPropertyAxiom(transformer: Ontouml2Gufo, relation: Relation) {
   transformer.addQuad(relationUri, 'rdfs:subPropertyOf', superProperty);
 }
 
-function writeRelationTypeAxiom(transformer: Ontouml2Gufo, relation: Relation) {
+function writeRelationTypeAxiom(transformer: Ontouml2Openapi, relation: Relation) {
   const relationUri = transformer.getUri(relation);
 
   const relationTypeMap = {
@@ -110,7 +110,7 @@ function writeRelationTypeAxiom(transformer: Ontouml2Gufo, relation: Relation) {
   transformer.addQuad(relationUri, 'rdf:type', typeUri);
 }
 
-function transformInstantiation(transformer: Ontouml2Gufo, relation: Relation): boolean {
+function transformInstantiation(transformer: Ontouml2Openapi, relation: Relation): boolean {
   const domainUri = transformer.getTargetUri(relation);
   const rangeUri = transformer.getSourceUri(relation);
 
@@ -122,7 +122,7 @@ function transformInstantiation(transformer: Ontouml2Gufo, relation: Relation): 
   return true;
 }
 
-function transformDerivation(transformer: Ontouml2Gufo, relation: Relation): boolean {
+function transformDerivation(transformer: Ontouml2Openapi, relation: Relation): boolean {
   const domainUri = transformer.getSourceUri(relation);
   const rangeUri = transformer.getTargetUri(relation);
 

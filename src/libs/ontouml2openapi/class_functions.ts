@@ -1,10 +1,10 @@
 import { Class, ClassStereotype, OntologicalNature, OntoumlType } from '@libs/ontouml';
-import { Ontouml2Gufo, transformAnnotations, getUriFromXsdMapping } from './';
+import { Ontouml2Openapi, transformAnnotations, getUriFromXsdMapping } from './';
 
 const N3 = require('n3');
 const { namedNode, literal } = N3.DataFactory;
 
-export function transformClass(transformer: Ontouml2Gufo, _class: Class): boolean {
+export function transformClass(transformer: Ontouml2Openapi, _class: Class): boolean {
   const { uriManager } = transformer;
   if (uriManager.getUriFromTaggedValues(_class) || getUriFromXsdMapping(_class) || _class.isPrimitiveDatatype()) {
     return true;
@@ -22,7 +22,7 @@ export function transformClass(transformer: Ontouml2Gufo, _class: Class): boolea
   return true;
 }
 
-export function transformClassAsIndividual(transformer: Ontouml2Gufo, _class: Class): boolean {
+export function transformClassAsIndividual(transformer: Ontouml2Openapi, _class: Class): boolean {
   const classTypeMap = {
     [ClassStereotype.KIND]: 'gufo:Kind',
     [ClassStereotype.QUANTITY]: 'gufo:Kind',
@@ -58,7 +58,7 @@ export function transformClassAsIndividual(transformer: Ontouml2Gufo, _class: Cl
   return true;
 }
 
-export function transformClassAsClass(transformer: Ontouml2Gufo, classElement: Class) {
+export function transformClassAsClass(transformer: Ontouml2Openapi, classElement: Class) {
   const classUri = transformer.getUri(classElement);
   transformer.addQuad(classUri, 'rdf:type', 'owl:NamedIndividual');
 
@@ -86,7 +86,7 @@ export function transformClassAsClass(transformer: Ontouml2Gufo, classElement: C
   }
 }
 
-export function transformEnumeration(transformer: Ontouml2Gufo, classElement: Class) {
+export function transformEnumeration(transformer: Ontouml2Openapi, classElement: Class) {
   const { literals } = classElement;
 
   if (!literals) {
@@ -234,7 +234,7 @@ export function getGufoParents(classElement: Class): GufoParentSettings {
 /**
  * Transform classes of same stereotype using owl:AllDisjointClasses
  */
-export function writeDisjointnessAxioms(transformer: Ontouml2Gufo, classes: Class[]): boolean {
+export function writeDisjointnessAxioms(transformer: Ontouml2Openapi, classes: Class[]): boolean {
   const ultimateSortalStereotypes = [
     ClassStereotype.KIND,
     ClassStereotype.QUANTITY,

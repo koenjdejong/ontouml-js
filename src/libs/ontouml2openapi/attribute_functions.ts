@@ -1,7 +1,7 @@
 import { OntoumlType, Property, Class } from '@libs/ontouml';
-import { Ontouml2Gufo, transformAnnotations } from './';
+import { Ontouml2Openapi, transformAnnotations } from './';
 
-export function transformAttribute(transformer: Ontouml2Gufo, attribute: Property): boolean {
+export function transformAttribute(transformer: Ontouml2Openapi, attribute: Property): boolean {
   const container = attribute.container;
 
   if (container.type !== OntoumlType.CLASS_TYPE) {

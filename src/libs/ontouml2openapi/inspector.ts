@@ -1,18 +1,18 @@
 import { ModelElement, Relation, Package, Class, Property } from '@libs/ontouml';
-import { Ontouml2Gufo, Issue, DefaultPrefixes, getPackagePrefixes } from './';
+import { Ontouml2Openapi, Issue, DefaultPrefixes, getPackagePrefixes } from './';
 
 import isURI from 'validate.io-uri';
 
 export class Inspector {
-  transformer: Ontouml2Gufo;
+  transformer: Ontouml2Openapi;
   issues: Issue[];
 
-  constructor(transformer: Ontouml2Gufo) {
+  constructor(transformer: Ontouml2Openapi) {
     this.issues = [];
     this.transformer = transformer;
   }
 
-  /* 
+  /*
   Pre-transformation issues to give users feedback about things that could potentially impact the transformation. Including:
   - Identify elements without name
   - Check invalid Base URI

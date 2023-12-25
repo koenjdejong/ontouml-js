@@ -1,5 +1,5 @@
 import { Package } from '@libs/ontouml';
-import { Ontouml2Gufo, normalizeName } from './';
+import { Ontouml2Openapi, normalizeName } from './';
 
 import _ from 'lodash';
 
@@ -11,7 +11,7 @@ export const DefaultPrefixes = {
   xsd: 'http://www.w3.org/2001/XMLSchema#'
 };
 
-export const getPrefixes = (ontouml2gufo: Ontouml2Gufo) => {
+export const getPrefixes = (ontouml2gufo: Ontouml2Openapi) => {
   return {
     ...getBasePrefix(ontouml2gufo),
     ...getPackagePrefixes(ontouml2gufo),
@@ -19,7 +19,7 @@ export const getPrefixes = (ontouml2gufo: Ontouml2Gufo) => {
   };
 };
 
-export const getBasePrefix = (ontouml2gufo: Ontouml2Gufo) => {
+export const getBasePrefix = (ontouml2gufo: Ontouml2Openapi) => {
   const { baseIri, basePrefix } = ontouml2gufo.options;
   let prefix = {};
 
@@ -32,7 +32,7 @@ export const getBasePrefix = (ontouml2gufo: Ontouml2Gufo) => {
   return prefix;
 };
 
-export const getPackagePrefixes = (ontouml2gufo: Ontouml2Gufo) => {
+export const getPackagePrefixes = (ontouml2gufo: Ontouml2Openapi) => {
   if (!ontouml2gufo.options.prefixPackages) {
     return {};
   }
@@ -49,7 +49,7 @@ export const getPackagePrefixes = (ontouml2gufo: Ontouml2Gufo) => {
   return prefixes;
 };
 
-export const getPackagePrefix = (ontouml2gufo: Ontouml2Gufo, pkg: Package): string => {
+export const getPackagePrefix = (ontouml2gufo: Ontouml2Openapi, pkg: Package): string => {
   const customPrefix = ontouml2gufo.options.getCustomPackagePrefix(pkg);
   if (customPrefix) {
     return customPrefix;
@@ -64,7 +64,7 @@ export const getPackagePrefix = (ontouml2gufo: Ontouml2Gufo, pkg: Package): stri
   return '';
 };
 
-export const getPackageUri = (ontouml2gufo: Ontouml2Gufo, pkg: Package): string => {
+export const getPackageUri = (ontouml2gufo: Ontouml2Openapi, pkg: Package): string => {
   const customUri = ontouml2gufo.options.getCustomPackageUri(pkg);
   if (customUri) {
     return customUri;

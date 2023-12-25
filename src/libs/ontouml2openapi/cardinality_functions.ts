@@ -1,10 +1,10 @@
 import { Relation, Class, Property, CARDINALITY_MAX_AS_NUMBER } from '@libs/ontouml';
-import { Ontouml2Gufo, getInverseSuperProperty, getSuperProperty } from './';
+import { Ontouml2Openapi, getInverseSuperProperty, getSuperProperty } from './';
 
 const N3 = require('n3');
 const { namedNode, literal } = N3.DataFactory;
 
-export function transformRelationCardinalities(transformer: Ontouml2Gufo, relation: Relation) {
+export function transformRelationCardinalities(transformer: Ontouml2Openapi, relation: Relation) {
   if (
     !(relation.getSource() instanceof Class) ||
     !(relation.getTarget() instanceof Class) ||
@@ -27,7 +27,7 @@ export function transformRelationCardinalities(transformer: Ontouml2Gufo, relati
   }
 }
 
-function getObjectPropertyNodes(transformer: Ontouml2Gufo, relation: Relation, propertyPosition) {
+function getObjectPropertyNodes(transformer: Ontouml2Openapi, relation: Relation, propertyPosition) {
   const { options } = transformer;
 
   if (relation.hasInstantiationStereotype() || relation.isDerivation() || relation.isTernary()) {
@@ -72,7 +72,7 @@ enum Direction {
   TARGET_TO_SOURCE = 2
 }
 
-function writerCardinalityAxiom(transformer: Ontouml2Gufo, relation: Relation, direction: Direction) {
+function writerCardinalityAxiom(transformer: Ontouml2Openapi, relation: Relation, direction: Direction) {
   if (!direction) return;
 
   let sourceClass: Class;

@@ -6,7 +6,7 @@ export * from './generalization_functions';
 export * from './generalization_set_functions';
 export * from './inspector';
 export * from './issue';
-export * from './ontouml2gufo';
+export * from './ontouml2Openapi';
 export * from './options';
 export * from './prefix_functions';
 export * from './relation_functions';

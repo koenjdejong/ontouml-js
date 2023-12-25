@@ -1,5 +1,5 @@
 import { Relation } from '@libs/ontouml';
-import { Ontouml2Gufo, transformInverseAnnotations } from './';
+import { Ontouml2Openapi, transformInverseAnnotations } from './';
 
 // TODO: check method name updated for disambiguation
 export function getPartWholeSuperPropertyInverse(relation: Relation): string {
@@ -39,7 +39,7 @@ export function getInverseSuperProperty(relation: Relation): string {
   return getSuperPropertyFromStereotypeInverse(relation) || getPartWholeSuperPropertyInverse(relation);
 }
 
-export function transformInverseRelation(transformer: Ontouml2Gufo, relation: Relation) {
+export function transformInverseRelation(transformer: Ontouml2Openapi, relation: Relation) {
   if (relation.hasInstantiationStereotype() || relation.isDerivation()) {
     return;
   }
@@ -65,7 +65,7 @@ export function transformInverseRelation(transformer: Ontouml2Gufo, relation: Re
   }
 }
 
-function writeInverseRelationTypeAxiom(transformer: Ontouml2Gufo, relation: Relation) {
+function writeInverseRelationTypeAxiom(transformer: Ontouml2Openapi, relation: Relation) {
   const relationUri = transformer.getInverseRelationUri(relation);
 
   const relationTypeMap = {
@@ -79,7 +79,7 @@ function writeInverseRelationTypeAxiom(transformer: Ontouml2Gufo, relation: Rela
   transformer.addQuad(relationUri, 'rdf:type', typeUri);
 }
 
-function writeInverseBaseRelationAxioms(transformer: Ontouml2Gufo, relation: Relation) {
+function writeInverseBaseRelationAxioms(transformer: Ontouml2Openapi, relation: Relation) {
   const relationUri = transformer.getInverseRelationUri(relation);
 
   transformer.addQuad(relationUri, 'rdf:type', 'owl:ObjectProperty');
@@ -95,7 +95,7 @@ function writeInverseBaseRelationAxioms(transformer: Ontouml2Gufo, relation: Rel
   }
 }
 
-function writeInverseSubPropertyAxiom(transformer: Ontouml2Gufo, relation: Relation) {
+function writeInverseSubPropertyAxiom(transformer: Ontouml2Openapi, relation: Relation) {
   let superProperty = getInverseSuperProperty(relation);
 
   if (!superProperty) {

@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import { Generalization, GeneralizationSet, OntoumlType, Class } from '@libs/ontouml';
-import { Ontouml2Gufo } from './';
+import { Ontouml2Openapi } from './';
 
 const N3 = require('n3');
 const { namedNode } = N3.DataFactory;
 
-export const transformGeneralizationSet = (transformer: Ontouml2Gufo, genSet: GeneralizationSet) => {
+export const transformGeneralizationSet = (transformer: Ontouml2Openapi, genSet: GeneralizationSet) => {
   if (!genSet.generalizations || genSet.generalizations.length === 0 || (!genSet.isComplete && !genSet.isDisjoint)) return;
 
   const classChildren = (genSet.generalizations as Generalization[])

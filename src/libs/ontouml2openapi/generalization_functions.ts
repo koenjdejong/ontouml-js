@@ -1,7 +1,7 @@
 import { Generalization } from '@libs/ontouml';
-import { Ontouml2Gufo } from './';
+import { Ontouml2Openapi } from './';
 
-export function transformGeneralization(transformer: Ontouml2Gufo, generalization: Generalization) {
+export function transformGeneralization(transformer: Ontouml2Openapi, generalization: Generalization) {
   const specific = generalization.specific;
   const general = generalization.general;
 

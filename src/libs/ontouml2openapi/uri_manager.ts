@@ -1,14 +1,14 @@
 import { Relation, ModelElement, Property, Class, Package } from '@libs/ontouml';
-import { Ontouml2Gufo, getSuperProperty, getPackagePrefix } from './';
+import { Ontouml2Openapi, getSuperProperty, getPackagePrefix } from './';
 
 import _ from 'lodash';
 
 export class UriManager {
-  transformer: Ontouml2Gufo;
+  transformer: Ontouml2Openapi;
   id2Uri: { [key: string]: string };
   uniqueUris: string[];
 
-  constructor(transformer: Ontouml2Gufo) {
+  constructor(transformer: Ontouml2Openapi) {
     this.transformer = transformer;
     this.generateUniqueUris();
   }

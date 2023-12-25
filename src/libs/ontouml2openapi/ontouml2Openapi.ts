@@ -1,7 +1,7 @@
 import { Project, Package, Relation } from '@libs/ontouml';
 import {
   Issue,
-  Ontouml2GufoOptions,
+  Ontouml2OpenapiOptions,
   Inspector,
   UriManager,
   getPrefixes,
@@ -24,30 +24,29 @@ const { namedNode, quad, literal } = N3.DataFactory;
 /**
  * Class that transforms OntoUML models in OWL ontologies aligned with the gUFO ontology.
  *
+ * @author Koen de Jong
  * @author Tiago Prince Sales
- * @author Claudenir Fonseca
- * @author Lucas Bassetti
  */
-export class Ontouml2Gufo implements Service {
+export class Ontouml2Openapi implements Service {
   model: Package;
-  options: Ontouml2GufoOptions;
+  options: Ontouml2OpenapiOptions;
   inspector: Inspector;
   owlCode: string;
   writer: Writer;
   uriManager: UriManager;
 
-  constructor(project: Project, options?: Partial<Ontouml2GufoOptions>);
-  constructor(model: Package, options?: Partial<Ontouml2GufoOptions>);
-  constructor(project: Project, options?: Partial<Ontouml2GufoOptions>);
-  constructor(input: Project | Package, options?: Partial<Ontouml2GufoOptions>);
-  constructor(input: Project | Package, options?: Partial<Ontouml2GufoOptions>) {
+  constructor(project: Project, options?: Partial<Ontouml2OpenapiOptions>);
+  constructor(model: Package, options?: Partial<Ontouml2OpenapiOptions>);
+  constructor(project: Project, options?: Partial<Ontouml2OpenapiOptions>);
+  constructor(input: Project | Package, options?: Partial<Ontouml2OpenapiOptions>);
+  constructor(input: Project | Package, options?: Partial<Ontouml2OpenapiOptions>) {
     if (input instanceof Project) {
       this.model = input.model;
     } else if (input instanceof Package) {
       this.model = input;
     }
 
-    this.options = options ? new Ontouml2GufoOptions(options) : new Ontouml2GufoOptions();
+    this.options = options ? new Ontouml2OpenapiOptions(options) : new Ontouml2OpenapiOptions();
     this.inspector = new Inspector(this);
     this.uriManager = new UriManager(this);
 
