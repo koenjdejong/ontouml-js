@@ -2,64 +2,29 @@ import { ModelElement, Relation, Class, Property, OntoumlType } from '@libs/onto
 import { ServiceIssue } from '@libs/service_issue';
 import { ServiceIssueSeverity } from '@libs/service_issue_severity';
 
-import uniqid from 'uniqid';
+import uniqid from "uniqid";
 
 export const IssueType = {
-  INVALID_BASE_IRI: {
-    code: 'invalid_base_iri',
-    severity: ServiceIssueSeverity.WARNING,
-    title: 'Invalid BaseIRI'
-  },
-  INVALID_CUSTOM_PACKAGE_PREFIX: {
-    code: 'invalid_custom_package_prefix',
-    severity: ServiceIssueSeverity.WARNING,
-    title: 'Protected prefix provided in custom package mapping'
-  },
-  INVALID_CUSTOM_PACKAGE_URI: {
-    code: 'invalid_custom_package_uri',
-    severity: ServiceIssueSeverity.WARNING,
-    title: 'Protected URI provided in custom package mapping'
-  },
-  INVALID_PACKAGE_PREFIX: {
-    code: 'invalid_package_prefix',
-    severity: ServiceIssueSeverity.WARNING,
-    title: 'Protected prefix generated in package mapping'
-  },
-  INVALID_PACKAGE_URI: {
-    code: 'invalid_package_uri',
-    severity: ServiceIssueSeverity.WARNING,
-    title: 'Protected URI generated in package mapping'
+  MISSING_CLASS_NAME: {
+    code: 'missing_class_name',
+    severity: ServiceIssueSeverity.ERROR,
+    title: 'Missing class name'
   },
   MISSING_RELATION_NAME: {
     code: 'missing_relation_name',
     severity: ServiceIssueSeverity.WARNING,
     title: 'Missing relation name'
   },
-  MISSING_INVERSE_RELATION_NAME: {
-    code: 'missing_inverse_relation_name',
+  MISSING_ATTRIBUTE_NAME: {
+    code: 'missing_attribute_name',
     severity: ServiceIssueSeverity.WARNING,
-    title: 'Missing inverse relation name'
-  },
-  MISSING_SOURCE_CARDINALITY: {
-    code: 'missing_source_cardinality',
-    severity: ServiceIssueSeverity.WARNING,
-    title: 'Missing cardinality'
-  },
-  MISSING_TARGET_CARDINALITY: {
-    code: 'missing_target_cardinality',
-    severity: ServiceIssueSeverity.WARNING,
-    title: 'Missing cardinality'
-  },
-  DUPLICATE_NAMES: {
-    code: 'duplicate_names',
-    severity: ServiceIssueSeverity.WARNING,
-    title: 'Duplicate element name'
+    title: 'Missing attribute name'
   },
   MISSING_ATTRIBUTE_TYPE: {
     code: 'missing_attribute_type',
     severity: ServiceIssueSeverity.WARNING,
     title: 'Missing attribute type'
-  }
+  },
 };
 
 export class Issue implements ServiceIssue {
@@ -71,197 +36,60 @@ export class Issue implements ServiceIssue {
   data: any;
 
   constructor(base: Partial<Issue>) {
-    (this.id = base.id || uniqid()),
-      (this.code = base.code),
-      (this.severity = base.severity),
-      (this.title = base.title),
-      (this.description = base.description),
-      (this.data = base.data);
+    this.id = base.id || uniqid();
+    this.code = base.code;
+    this.title = base.title;
+    this.description = base.description;
+    this.severity = base.severity;
+    this.data = base.data;
   }
 
-  static createInvalidBaseIri(baseIri: string): Issue {
-    const warning = {
-      ...IssueType.INVALID_BASE_IRI,
-      description: `"${baseIri}" is not a valid IRI.`,
-      data: { baseIri }
-    };
-
-    return new Issue(warning);
-  }
-
-  static createInvalidCustomPackagePrefix(prefix: string, forbiddenPrefixes: string[], packageEl): Issue {
-    const warning = {
-      ...IssueType.INVALID_CUSTOM_PACKAGE_PREFIX,
-      description: `The prefix "${prefix}" is already used by another package imported by gUFO. Avoid using the following prefixes: 
-        ${forbiddenPrefixes.join(', ')}.`,
-      data: {
-        prefix,
-        ...this.getElementData(packageEl)
-      }
-    };
-
-    return new Issue(warning);
-  }
-
-  static createInvalidCustomPackageUri(uri: string, packageEl): Issue {
-    const warning = {
-      ...IssueType.INVALID_CUSTOM_PACKAGE_URI,
-      description: `The URI "${uri}" is already used by another package imported by gUFO.`,
-      data: {
-        uri,
-        ...this.getElementData(packageEl)
-      }
-    };
-
-    return new Issue(warning);
-  }
-
-  static createInvalidPackagePrefix(prefix: string, forbiddenPrefixes: string[]): Issue {
-    const warning = {
-      ...IssueType.INVALID_PACKAGE_PREFIX,
-      description: `The prefix "${prefix}" is already used by another package imported by gUFO. Beware of the following prefixes: 
-        ${forbiddenPrefixes.join(', ')}.`,
-      data: { prefix }
-    };
-    return new Issue(warning);
-  }
-
-  static createInvalidPackageUri(uri: string): Issue {
-    const warning = {
-      ...IssueType.INVALID_PACKAGE_URI,
-      description: `The URI "${uri}" is already used by another package imported by gUFO.`,
-      data: { uri }
-    };
-
-    return new Issue(warning);
-  }
-
-  static createMissingRelationName(relation: Relation): Issue {
-    const stereotypeName = getStereotypeName(relation);
-    const source = relation.getSource();
-    const target = relation.getTarget();
-
-    const warning = {
-      ...IssueType.MISSING_RELATION_NAME,
-      description: `Missing name on ${stereotypeName} relation between classes "${source.name}" and "${target.name}".`,
-      data: { ...this.getElementData(relation) }
-    };
-
-    return new Issue(warning);
-  }
-
-  static createMissingInverseRelationName(relation: Relation): Issue {
-    const stereotypeName = getStereotypeName(relation);
-    const source = relation.getSource();
-    const target = relation.getTarget();
-
-    const warning = {
-      ...IssueType.MISSING_INVERSE_RELATION_NAME,
-      description: `Missing inverse name for ${stereotypeName} relation between classes "${source.name}" and "${target.name}".`,
-      data: { ...this.getElementData(relation) }
-    };
-
-    return new Issue(warning);
-  }
-
-  static createMissingSourceCardinality(relation: Relation): Issue {
-    const source = relation.getSource();
-    const target = relation.getTarget();
-
-    const warning = {
-      ...IssueType.MISSING_SOURCE_CARDINALITY,
-      description: `Missing cardinality on the source end of relation "${relation.name}" between clasess "${source.name}" and "${target.name}".`,
-      data: { ...this.getElementData(relation) }
-    };
-
-    return new Issue(warning);
-  }
-
-  static createMissingTargetCardinality(relation: Relation): Issue {
-    const source = relation.getSource();
-    const target = relation.getTarget();
-
-    const warning = {
-      ...IssueType.MISSING_TARGET_CARDINALITY,
-      description: `Missing cardinality on the target end of relation "${relation.name}" between classes "${source.name}" and "${target.name}".`,
-      data: { ...this.getElementData(relation) }
-    };
-
-    return new Issue(warning);
-  }
-
-  static createDuplicateNames(repeatedElements: ModelElement[], duplicateName: string): Issue {
-    const occurrences = repeatedElements.map((element: ModelElement) => {
-      if (element.type === OntoumlType.PROPERTY_TYPE) {
-        const property = element as Property;
-        const parent = property.container as ModelElement;
-
-        if (parent.type === OntoumlType.RELATION_TYPE) {
-          const relation = parent as Relation;
-          const source = relation.getSource();
-          const target = relation.getTarget();
-
-          return `association end "${element.getName()}" of relation "${relation.name}" between classes "${source.name}" and "${
-            target.name
-          }"`;
-        }
-
-        return `attribute "${element.getName()}" of class ${parent.name}`;
-      }
-
-      if (element.type === OntoumlType.RELATION_TYPE) {
-        const relation = element as Relation;
-        const source = relation.getSource();
-        const target = relation.getTarget();
-
-        return `relation "${relation.name}" between classes "${source.name}" and "${target.name}"`;
-      }
-
-      return `${element.type.toLowerCase()} "${element.getName()}"`;
-    });
-
-    const warning = {
-      ...IssueType.DUPLICATE_NAMES,
-      description: `The name "${duplicateName}" has been used multiple times: ${occurrences
-        .join(', ')
-        .replace(/,(?!.*,)/gim, ' and')}.`,
-      data: {
-        elements: repeatedElements.map((elem) => ({ id: elem.id, name: elem.name }))
-      }
-    };
-
-    return new Issue(warning);
-  }
-
-  static createMissingAttributeType(classEl: Class, attribute: Property): Issue {
-    const warning = {
-      ...IssueType.MISSING_ATTRIBUTE_TYPE,
-      description: `Missing type on attribute "${classEl.name}::${attribute.name}".`,
-      data: {
-        element: this.getIdName(classEl),
-        attribute: this.getIdName(attribute)
-      }
-    };
-
-    return new Issue(warning);
-  }
-
-  static getElementData(element) {
-    return {
-      element: this.getIdName(element)
-    };
-  }
-
-  static getIdName(element) {
+  static GET_ELEMENT_DATA(element: ModelElement): any {
     return {
       id: element.id,
-      name: element.getName()
+      type: element.type,
+      name: element.name,
     };
   }
-}
 
-//TODO: Move this to the core API
-function getStereotypeName(relation: Relation): string {
-  const stereotype = relation.stereotype || null;
-  return stereotype ? `«${stereotype}»` : '';
+  static CREATE_MISSING_CLASS_NAME(_class: Class): Issue {
+    const error = {
+      ...IssueType.MISSING_CLASS_NAME,
+      description: `Missing name on Class ${_class.name.getText()}.`,
+      data: Issue.GET_ELEMENT_DATA(_class),
+    };
+
+    return new Issue(error);
+  }
+
+  static CREATE_MISSING_RELATION_NAME(relation: Relation): Issue {
+    const classNames = relation.properties.map((property: Property) => property.propertyType.name.getText() || '');
+    const warning = {
+      ...IssueType.MISSING_RELATION_NAME,
+      description: `Missing name on Relation between classes ${classNames.join(', ')}, defaulting to ${classNames.join('')}Relation.`,
+      data: Issue.GET_ELEMENT_DATA(relation),
+    };
+
+    return new Issue(warning);
+  }
+
+  static CREATE_MISSING_ATTRIBUTE_NAME(attribute: Property): Issue {
+    const warning = {
+      ...IssueType.MISSING_ATTRIBUTE_NAME,
+      description: `Missing name on Attribute ${attribute.name.getText()}.`,
+      data: Issue.GET_ELEMENT_DATA(attribute),
+    };
+
+    return new Issue(warning);
+  }
+
+  static CREATE_MISSING_ATTRIBUTE_TYPE(attribute: Property): Issue {
+    const warning = {
+      ...IssueType.MISSING_ATTRIBUTE_TYPE,
+      description: `Missing type on Attribute ${attribute.name.getText()}, defaulting to String.`,
+      data: Issue.GET_ELEMENT_DATA(attribute),
+    };
+
+    return new Issue(warning);
+  }
 }

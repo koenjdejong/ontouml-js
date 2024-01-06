@@ -1,18 +1,18 @@
 import { Generalization } from '@libs/ontouml';
 import { Ontouml2Openapi } from './';
+import {AllOfSchema, ObjectSchema, ReferenceSchema} from "@libs/ontouml2openapi/types";
 
-export function transformGeneralization(transformer: Ontouml2Openapi, generalization: Generalization) {
-  const specific = generalization.specific;
-  const general = generalization.general;
+export function transformGeneralization(transformer: Ontouml2Openapi, generalization: Generalization): boolean {
+  const general = transformer.getSchema(generalization.general.name.getText());
+  const specific = transformer.getSchema(generalization.specific.name.getText());
+  if (!specific || !general) return false;
 
-  const specificUri = transformer.getUri(specific);
-  const generalUri = transformer.getUri(general);
+  if (!(specific instanceof ObjectSchema)) return false;
 
-  if (generalization.involvesClasses()) {
-    transformer.addQuad(specificUri, 'rdfs:subClassOf', generalUri);
-  }
+  const schema = new AllOfSchema(specific);
+  new ReferenceSchema(generalization.general.name.getText());
+  schema.addSchema(general);
+  transformer.addSchema(generalization.specific.name.getText(), schema);
 
-  if (generalization.involvesRelations()) {
-    transformer.addQuad(specificUri, 'rdfs:subPropertyOf', generalUri);
-  }
+  return true;
 }

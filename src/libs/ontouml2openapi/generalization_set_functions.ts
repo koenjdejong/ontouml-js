@@ -1,61 +1,29 @@
-import _ from 'lodash';
-import { Generalization, GeneralizationSet, OntoumlType, Class } from '@libs/ontouml';
+import { Generalization, GeneralizationSet, Class } from '@libs/ontouml';
 import { Ontouml2Openapi } from './';
+import { EnumSchema, Schema } from "@libs/ontouml2openapi/types";
 
-const N3 = require('n3');
-const { namedNode } = N3.DataFactory;
+export const transformGeneralizationSet = (transformer: Ontouml2Openapi, set: GeneralizationSet): boolean => {
+  if (!set.generalizations || set.generalizations.length === 0) return false;
 
-export const transformGeneralizationSet = (transformer: Ontouml2Openapi, genSet: GeneralizationSet) => {
-  if (!genSet.generalizations || genSet.generalizations.length === 0 || (!genSet.isComplete && !genSet.isDisjoint)) return;
+  const children = set.generalizations.map((generalization: Generalization) => generalization.specific);
+  const parent = set.getGeneralClass();
+  if (!parent) return false;
 
-  const classChildren = (genSet.generalizations as Generalization[])
-    .map(gen => gen.specific)
-    .filter(child => child.type === OntoumlType.CLASS_TYPE);
-  const onlyClassChildren = classChildren.length === genSet.generalizations.length;
+  const parentSchema = transformer.getSchema(parent.name.getText());
+  if (!parentSchema) return false;
 
-  if (!onlyClassChildren) return;
+  const childrenNames = children.map((child: Class) => child.name.getText());
+  const childrenSchemas = childrenNames.map((name: string) => transformer.getSchema(name));
+  if (childrenSchemas.some((schema: Schema) => Object.keys(schema.properties || []).length)) return false;
 
-  const classParents = genSet.generalizations.map((gen: Generalization) => gen.getGeneralClass());
-  const onlyClassParent = classParents.length === genSet.generalizations.length;
-  const parent = genSet.getGeneralClass();
-  const uniqueParent = !!parent;
+  const schema = new EnumSchema(childrenNames);
+  const name = set.name.getText() || `${parent.name.getText()}Type`;
+  const required = set.isComplete || set.isDisjoint;
+  parentSchema.addProperty(name, schema, required);
 
-  if (!uniqueParent || !onlyClassParent) {
-    return;
-  }
+  childrenNames.forEach((name: string) => {
+    transformer.removeSchema(name);
+  });
 
-  if (genSet.isDisjoint) {
-    const rigidOrAbstractChildren = genSet
-      .getSpecificClasses()
-      .filter((child: Class) => child.hasRigidStereotype() || (child.isRestrictedToAbstract() && !child.isPrimitiveDatatype()));
-
-    if (rigidOrAbstractChildren.length > 1) {
-      const childrenNodes = rigidOrAbstractChildren.map(_class => namedNode(transformer.getUri(_class)));
-      transformer.addQuad(
-        transformer.writer.blank(namedNode('rdf:type'), namedNode('owl:AllDisjointClasses')),
-        namedNode('owl:members'),
-        transformer.writer.list(childrenNodes)
-      );
-    }
-  }
-
-  if (genSet.isComplete && classChildren.length > 1) {
-    const parentUri = transformer.getUri(parent);
-    const childrenNodes = classChildren.map(_class => namedNode(transformer.getUri(_class)));
-
-    transformer.addQuad(
-      namedNode(parentUri),
-      namedNode('owl:equivalentClass'),
-      transformer.writer.blank([
-        {
-          predicate: namedNode('rdf:type'),
-          object: namedNode('owl:Class')
-        },
-        {
-          predicate: namedNode('owl:unionOf'),
-          object: transformer.writer.list(childrenNodes)
-        }
-      ])
-    );
-  }
-};
+  return true;
+}

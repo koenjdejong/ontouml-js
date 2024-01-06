@@ -1,136 +1,66 @@
-import { Relation } from '@libs/ontouml';
-import { Ontouml2Openapi, transformAnnotations } from './';
+import {Cardinality, CARDINALITY_MAX_AS_NUMBER, Property, Relation} from '@libs/ontouml';
+import { Ontouml2Openapi } from './';
+import {ArraySchema, ObjectSchema, ReferenceSchema, Schema} from "@libs/ontouml2openapi/types";
 
-export function transformRelation(transformer: Ontouml2Openapi, relation: Relation) {
-  if (relation.hasInstantiationStereotype()) {
-    transformInstantiation(transformer, relation);
-    return;
-  }
+export function transformRelation(transformer: Ontouml2Openapi, relation: Relation): boolean {
+  if (relation.isBinary()) return transformBinaryRelation(transformer, relation);
+  if (relation.isTernary()) return transformTernaryRelation(transformer, relation);
+  return false;
+}
 
-  if (relation.hasDerivationStereotype()) {
-    transformDerivation(transformer, relation);
-    return;
-  }
-
-  if (relation.hasMaterialStereotype() || relation.hasComparativeStereotype()) {
-    writeBaseRelationAxioms(transformer, relation);
-    transformAnnotations(transformer, relation);
-    writeRelationTypeAxiom(transformer, relation);
-    return;
-  }
-
-  if (!relation.isPartWholeRelation() && !relation.stereotype) {
-    writeBaseRelationAxioms(transformer, relation);
-    transformAnnotations(transformer, relation);
-    return;
-  }
-
-  if (transformer.options.createObjectProperty) {
-    writeBaseRelationAxioms(transformer, relation);
-    transformAnnotations(transformer, relation);
-    writeSubPropertyAxiom(transformer, relation);
-    return;
+function transformCardinality(cardinality: Cardinality, name: string): { schema: Schema, name: string, required: boolean } {
+  if (cardinality.isZeroToOne()) {
+    const reference = new ReferenceSchema(name)
+    return { schema: reference, name, required: false }
+  } else if (cardinality.isZeroToMany()) {
+    const reference = new ReferenceSchema(name)
+    const array = new ArraySchema(reference)
+    return { schema: array, name: `${name}s`, required: false }
+  } else if (cardinality.isOneToOne()) {
+    const reference = new ReferenceSchema(name)
+    return { schema: reference, name, required: true}
+  } else if (cardinality.isOneToMany()) {
+    const reference = new ReferenceSchema(name)
+    const array = new ArraySchema(reference)
+    return { schema: array, name: `${name}s`, required: true }
+  } else {
+    throw new Error(`Invalid cardinality: ${cardinality.toString()} for property ${name}`)
   }
 }
 
-function writeBaseRelationAxioms(transformer: Ontouml2Openapi, relation: Relation) {
-  const relationUri = transformer.getUri(relation);
-  transformer.addQuad(relationUri, 'rdf:type', 'owl:ObjectProperty');
+function transformBinaryRelation(transformer: Ontouml2Openapi, relation: Relation): boolean {
+  const source = relation.getSourceEnd()
+  const target = relation.getTargetEnd()
+  const sourceName = source.propertyType.name.getText()
+  const targetName = target.propertyType.name.getText()
+  const sourceSchema = transformer.getSchema(sourceName)
+  const targetSchema = transformer.getSchema(targetName)
+  if (!sourceSchema || !targetSchema) return false;
 
-  const domainUri = transformer.getSourceUri(relation);
-  if (domainUri) {
-    transformer.addQuad(relationUri, 'rdfs:domain', domainUri);
-  }
+  const { schema, name, required } = transformCardinality(source.cardinality, sourceName)
+  targetSchema.addProperty(name, schema, required)
+  const { schema: targetRelation, name: targetRelationName, required: targetRequired } =
+    transformCardinality(target.cardinality, targetName)
+  sourceSchema.addProperty(targetRelationName, targetRelation, targetRequired)
 
-  const rangeUri = transformer.getTargetUri(relation);
-  if (rangeUri) {
-    transformer.addQuad(relationUri, 'rdfs:range', rangeUri);
-  }
-}
-
-export function getPartWholeSuperProperty(relation: Relation): string {
-  if (!relation.isPartWholeRelation()) return null;
-  if (relation.holdsBetweenSubstantials()) return 'gufo:isObjectProperPartOf';
-  if (relation.holdsBetweenMoments()) return 'gufo:isAspectProperPartOf';
-  if (relation.holdsBetweenEvents()) return 'gufo:isEventProperPartOf';
-  return 'gufo:isProperPartOf';
-}
-
-export function getSuperPropertyFromStereotype(relation: Relation): string {
-  const stereotype = relation.stereotype;
-  const ontoumlRelation2GufoProperty = {
-    bringsAbout: 'gufo:broughtAbout',
-    characterization: 'gufo:inheresIn',
-    componentOf: 'gufo:isComponentOf',
-    creation: 'gufo:wasCreatedIn',
-    derivation: 'gufo:isDerivedFrom',
-    externalDependence: 'gufo:externallyDependsOn',
-    historicalDependence: 'gufo:historicallyDependsOn',
-    instantiation: 'gufo:categorizes',
-    manifestation: 'gufo:manifestedIn',
-    mediation: 'gufo:mediates',
-    memberOf: 'gufo:isCollectionMemberOf',
-    participation: 'gufo:participatedIn',
-    participational: 'gufo:isEventProperPartOf',
-    subCollectionOf: 'gufo:isSubCollectionOf',
-    subQuantityOf: 'gufo:isSubQuantityOf',
-    termination: 'gufo:wasTerminatedIn',
-    triggers: 'gufo:contributedToTrigger'
-  };
-
-  return ontoumlRelation2GufoProperty[stereotype];
-}
-
-export function getSuperProperty(relation: Relation): string {
-  return getSuperPropertyFromStereotype(relation) || getPartWholeSuperProperty(relation);
-}
-
-function writeSubPropertyAxiom(transformer: Ontouml2Openapi, relation: Relation) {
-  let superProperty = getSuperProperty(relation);
-
-  if (!superProperty) {
-    return;
-  }
-
-  const relationUri = transformer.getUri(relation);
-  transformer.addQuad(relationUri, 'rdfs:subPropertyOf', superProperty);
-}
-
-function writeRelationTypeAxiom(transformer: Ontouml2Openapi, relation: Relation) {
-  const relationUri = transformer.getUri(relation);
-
-  const relationTypeMap = {
-    material: 'gufo:MaterialRelationshipType',
-    comparative: 'gufo:ComparativeRelationshipType'
-  };
-
-  const stereotype = relation.stereotype;
-  const typeUri = relationTypeMap[stereotype];
-
-  transformer.addQuad(relationUri, 'rdf:type', typeUri);
-}
-
-function transformInstantiation(transformer: Ontouml2Openapi, relation: Relation): boolean {
-  const domainUri = transformer.getTargetUri(relation);
-  const rangeUri = transformer.getSourceUri(relation);
-
-  if (!domainUri || !rangeUri) {
-    return false;
-  }
-
-  transformer.addQuad(domainUri, 'gufo:categorizes', rangeUri);
   return true;
 }
 
-function transformDerivation(transformer: Ontouml2Openapi, relation: Relation): boolean {
-  const domainUri = transformer.getSourceUri(relation);
-  const rangeUri = transformer.getTargetUri(relation);
+function transformTernaryRelation(transformer: Ontouml2Openapi, relation: Relation): boolean {
+  const classNames = relation.properties.map((property: Property) => property.propertyType.name.getText() || '')
+  const relationName = relation.name.getText() || `${classNames.join('')}Relation`
+  const relationSchema = new ObjectSchema()
 
-  if (!domainUri || !rangeUri) {
-    return false;
-  }
+  relation.properties.forEach((property: Property) => {
+    const classSchema = transformer.getSchema(property.propertyType.name.getText())
+    if (!classSchema) throw new Error(`Schema not found for property ${property.propertyType.name.getText()}`)
 
-  transformer.addQuad(domainUri, 'gufo:isDerivedFrom', rangeUri);
+    const { schema, name, required } = transformCardinality(property.cardinality, property.propertyType.name.getText())
+    relationSchema.addProperty(name, schema, required)
+    classSchema.addProperty(relationName, new ReferenceSchema(relationName), required)
+  })
+
+  transformer.addSchema(relationName, relationSchema)
 
   return true;
 }

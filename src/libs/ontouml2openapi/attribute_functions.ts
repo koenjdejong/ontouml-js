@@ -1,51 +1,42 @@
-import { OntoumlType, Property, Class } from '@libs/ontouml';
-import { Ontouml2Openapi, transformAnnotations } from './';
+import { Property } from '@libs/ontouml';
+import { Ontouml2Openapi } from './';
+import {PrimitiveSchema, PrimitiveType, ReferenceSchema} from './types';
+
+const typeMap: Record<string, PrimitiveType> = {
+  // boolean
+  'boolean': 'boolean',
+  'bool': 'boolean',
+  // integer
+  'integer': 'integer',
+  'int': 'integer',
+  // number
+  'number': 'number',
+  'num': 'number',
+  'float': 'number',
+  'double': 'number',
+  // string
+  'string': 'string',
+  'str': 'string',
+  'char': 'string',
+  'character': 'string',
+  'text': 'string',
+  // TODO date
+};
 
 export function transformAttribute(transformer: Ontouml2Openapi, attribute: Property): boolean {
-  const container = attribute.container;
+  const schema = transformer.getSchema(attribute.container.name.getText());
+  if (!schema) return false;
 
-  if (container.type !== OntoumlType.CLASS_TYPE) {
-    return false;
+  if (transformer.getSchema(attribute.name.getText())) {
+    const reference = new ReferenceSchema(attribute.name.getText());
+    schema.addProperty(attribute.name.getText(), reference, false);
+    return true;
   }
 
-  const containerClass: Class = container as Class;
+  let type = typeMap[attribute.propertyType.name.getText().toLowerCase()];
+  if (!type) type = 'string';
 
-  const attributeUri = transformer.getUri(attribute);
-  const containerUri = transformer.getUri(containerClass);
-
-  const containerIsDatatype = containerClass.hasDatatypeStereotype();
-  const containerIsConcreteIndividual = !containerClass.isRestrictedToAbstract();
-
-  const isTypelessAttribute = !attribute.propertyType;
-  const isPrimitiveAttribute = attribute.propertyType && (attribute.propertyType as Class).isPrimitiveDatatype();
-
-  transformer.addQuad(attributeUri, 'rdfs:domain', containerUri);
-
-  if (!isTypelessAttribute) {
-    const attributeTypeUri = transformer.getUri(attribute.propertyType);
-    transformer.addQuad(attributeUri, 'rdfs:range', attributeTypeUri);
-  }
-
-  if (isTypelessAttribute || isPrimitiveAttribute) {
-    transformer.addQuad(attributeUri, 'rdf:type', 'owl:DatatypeProperty');
-
-    if (containerIsDatatype) {
-      transformer.addQuad(attributeUri, 'rdfs:subPropertyOf', 'gufo:hasValueComponent');
-    } else if (containerIsConcreteIndividual) {
-      transformer.addQuad(attributeUri, 'rdfs:subPropertyOf', 'gufo:hasQualityValue');
-    }
-  } else {
-    transformer.addQuad(attributeUri, 'rdf:type', 'owl:ObjectProperty');
-
-    const isComplexAttribute = (attribute.propertyType as Class).isComplexDatatype();
-    const isEnumeratedAttribute = (attribute.propertyType as Class).hasEnumerationStereotype();
-
-    if (containerIsConcreteIndividual && (isComplexAttribute || isEnumeratedAttribute)) {
-      transformer.addQuad(attributeUri, 'rdfs:subPropertyOf', 'gufo:hasReifiedQualityValue');
-    }
-  }
-
-  transformAnnotations(transformer, attribute);
+  schema.addProperty(attribute.name.getText(), new PrimitiveSchema(type));
 
   return true;
 }
