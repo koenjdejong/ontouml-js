@@ -1,6 +1,6 @@
 import {Class, ClassStereotype, Literal} from '@libs/ontouml';
 import { Ontouml2Openapi } from './';
-import {ObjectSchema, PrimitiveSchema} from "@libs/ontouml2openapi/types";
+import {EnumSchema, ObjectSchema, PrimitiveSchema} from "@libs/ontouml2openapi/types";
 
 enum ClassType {
   SCHEMA = 'schema',
@@ -15,14 +15,14 @@ const classTypeMap = {
   [ClassStereotype.MODE]: null,
   [ClassStereotype.QUALITY]: null,
   [ClassStereotype.SUBKIND]: ClassType.SCHEMA,
-  [ClassStereotype.ROLE]: null,
+  [ClassStereotype.ROLE]: ClassType.SCHEMA,
   [ClassStereotype.HISTORICAL_ROLE]: null,
   [ClassStereotype.HISTORICAL_ROLE_MIXIN]: null,
-  [ClassStereotype.PHASE]: null,
+  [ClassStereotype.PHASE]: ClassType.SCHEMA,
   [ClassStereotype.CATEGORY]: ClassType.SCHEMA,
   [ClassStereotype.MIXIN]: ClassType.SCHEMA,
-  [ClassStereotype.ROLE_MIXIN]: null,
-  [ClassStereotype.PHASE_MIXIN]: null,
+  [ClassStereotype.ROLE_MIXIN]: ClassType.SCHEMA,
+  [ClassStereotype.PHASE_MIXIN]: ClassType.SCHEMA,
   [ClassStereotype.EVENT]: null,
   [ClassStereotype.SITUATION]: null,
   [ClassStereotype.TYPE]: null,
@@ -47,7 +47,7 @@ export function transformClass(transformer: Ontouml2Openapi, _class: Class): boo
 function transformToSchema(transformer: Ontouml2Openapi, _class: Class): boolean {
   const object = new ObjectSchema()
   object.description = _class.description.getText();
-  if (transformer.options.addOntoumlAttributes) {
+  if (transformer.options.addOntoUMLAttributes) {
     object.addOntoUMLAnnotation(_class.id, _class.stereotype, _class.isAbstract, _class.isDerived);
   }
   if (!_class.isAbstract) {
@@ -58,9 +58,7 @@ function transformToSchema(transformer: Ontouml2Openapi, _class: Class): boolean
 }
 
 function transformToEnum(transformer: Ontouml2Openapi, _class: Class): boolean {
-  const object = new ObjectSchema()
   const literals = _class.literals.map((literal: Literal) => literal.name.getText())
-  literals.forEach((literal: string) => object.addProperty(literal, new PrimitiveSchema('string'), false))
-  transformer.addSchema(_class.name.getText(), object);
+  transformer.addSchema(_class.name.getText(), new EnumSchema(literals));
   return true;
 }

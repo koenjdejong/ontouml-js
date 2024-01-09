@@ -74,18 +74,11 @@ export class Ontouml2Openapi implements Service {
   }
 
   initialize() {
-    this.result = {
-      openapi: '3.0.0',
-      info: {
-        version: '1.0.0',
-        title: this.model.name.getText(),
-        description: this.model.description.getText()
-      },
-      paths: {},
-      components: {
-        schemas: {}
-      }
-    };
+    this.result = new OpenAPISchema(
+      this.model.name.getText(),
+      this.model.description.getText(),
+      this.options,
+    );
   }
 
   getSchema(name?: string): Schema | undefined {
@@ -155,20 +148,15 @@ export class Ontouml2Openapi implements Service {
   createPath(name: string, schema: Schema) {
     if (!schema.path) return;
 
-    this.result.paths = {
-    };
+    // TODO
   }
 
   run(): { result: OpenAPISchema; issues?: ServiceIssue[] } {
     this.transform();
     this.createPaths();
 
-    Object.entries(this.result.components.schemas).forEach(([name, schema]: [string, Schema]) => {
-      this.result.components.schemas[name] = schema.parse();
-    });
-
     return {
-      result: this.result,
+      result: this.result.parse(),
       issues: this.getIssues() || null
     };
   }

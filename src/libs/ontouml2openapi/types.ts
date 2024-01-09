@@ -1,36 +1,68 @@
-import * as console from "console";
+import {Ontouml2OpenapiOptions} from "@libs/ontouml2openapi/options";
 
 export type PrimitiveType = 'string' | 'number' | 'integer' | 'boolean' | 'null'
 export type Type = PrimitiveType | 'array' | 'object'
-export type OpenAPISchema = {
-  openapi: string,
+export type License = {
+  name: string,
+  url?: string,
+}
+export type Contact = {
+  name: string,
+  url?: string,
+  email?: string,
+}
+export type Server = {
+  url: string,
+  description?: string,
+  variables?: object,
+}
+export class OpenAPISchema {
   info: {
     title: string,
     version: string,
     summary?: string,
     description?: string,
     termsOfService?: string,
-    contact?: {
-      name: string,
-      url?: string,
-      email?: string,
-    },
-    license?: {
-      name: string,
-      url?: string,
-    },
-  },
-  servers?: {
-    url: string,
-    description?: string,
-    variables?: object,
-  }[],
-  paths: object,
+    contact?: Contact,
+    license?: License,
+  }
+  servers?: Server[]
+  paths: object = {}
   components: {
     schemas: {
       [name: string]: Schema,
     },
-  },
+  }
+
+  constructor(name: string, description: string | undefined, options: Ontouml2OpenapiOptions) {
+    this.info = {
+      title: name,
+      version: options.version,
+    }
+    if (description) this.info.description = description
+    if (options.summary) this.info.summary = options.summary
+    if (options.termsOfService) this.info.termsOfService = options.termsOfService
+    if (options.contact) this.info.contact = options.contact
+    if (options.license) this.info.license = options.license
+    this.servers = options.servers
+    this.paths = {}
+    this.components = { schemas: {} }
+  }
+
+  parse() {
+    const result: any = {
+      info: this.info,
+      paths: this.paths,
+    }
+    if (this.servers?.length) result.servers = this.servers
+    if (this.components.schemas) {
+      result.components = { schemas: {} }
+      Object.entries(this.components.schemas).forEach(([name, schema]: [string, Schema]) => {
+        result.components.schemas[name] = schema.parse()
+      })
+    }
+    return result
+  }
 }
 
 export class Schema {

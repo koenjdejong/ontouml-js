@@ -1,6 +1,6 @@
 import { Generalization, GeneralizationSet, Class } from '@libs/ontouml';
 import { Ontouml2Openapi } from './';
-import { EnumSchema, Schema } from "@libs/ontouml2openapi/types";
+import {EnumSchema, ObjectSchema, Schema} from "@libs/ontouml2openapi/types";
 
 export const transformGeneralizationSet = (transformer: Ontouml2Openapi, set: GeneralizationSet): boolean => {
   if (!set.generalizations || set.generalizations.length === 0) return false;
@@ -22,7 +22,10 @@ export const transformGeneralizationSet = (transformer: Ontouml2Openapi, set: Ge
   parentSchema.addProperty(name, schema, required);
 
   childrenNames.forEach((name: string) => {
-    transformer.removeSchema(name);
+    const schema = transformer.getSchema(name);
+    if (schema && !(schema as ObjectSchema).properties) {
+      transformer.removeSchema(name);
+    }
   });
 
   return true;
