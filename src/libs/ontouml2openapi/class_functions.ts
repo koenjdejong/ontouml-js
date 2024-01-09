@@ -1,6 +1,6 @@
-import {Class, ClassStereotype, Literal} from '@libs/ontouml';
+import { Class, ClassStereotype, Literal } from '@libs/ontouml';
 import { Ontouml2Openapi } from './';
-import {EnumSchema, ObjectSchema, PrimitiveSchema} from "@libs/ontouml2openapi/types";
+import { EnumSchema, ObjectSchema } from "@libs/ontouml2openapi/types";
 
 enum ClassType {
   SCHEMA = 'schema',

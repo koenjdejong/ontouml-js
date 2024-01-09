@@ -58,7 +58,7 @@ export class OpenAPISchema {
     if (this.components.schemas) {
       result.components = { schemas: {} }
       Object.entries(this.components.schemas).forEach(([name, schema]: [string, Schema]) => {
-        result.components.schemas[name] = schema.parse()
+        result.components.schemas[name] = schema.parse(1)
       })
     }
     return result
@@ -85,7 +85,7 @@ export class Schema {
     }
   }
 
-  parse() {
+  parse(_level: number): { [key: string]: any } | undefined {
     const result: any = {}
     if (this.description) result.description = this.description
     if (this.required.length > 0) result.required = this.required
@@ -110,9 +110,9 @@ export class PrimitiveSchema extends Schema {
     if (type) this.type = type
   }
 
-  parse() {
+  parse(level: number) {
     return {
-      ...super.parse(),
+      ...super.parse(level),
       type: this.type,
     }
   }
@@ -127,9 +127,10 @@ export class EnumSchema extends Schema {
     this.enum = values
   }
 
-  parse() {
+  parse(level: number) {
+    if (level === 1) return undefined
     return {
-      ...super.parse(),
+      ...super.parse(level),
       type: this.type,
       enum: this.enum,
     }
@@ -145,14 +146,13 @@ export class ArraySchema extends Schema {
     this.items = items
   }
 
-  parse() {
+  parse(level: number) {
+    if (level === 1) return undefined
     const result = {
-      ...super.parse(),
+      ...super.parse(level),
       type: this.type,
     }
-    if (this.items) {
-      result.items = this.items.parse()
-    }
+    if (this.items) result.items = this.items.parse(level + 1)
     return result
   }
 }
@@ -161,15 +161,15 @@ export class ObjectSchema extends Schema {
   type: Type = 'object'
   properties: { [name: string]: Schema } = {}
 
-  parse() {
+  parse(level: number) {
     const result = {
-      ...super.parse(),
+      ...super.parse(level),
       type: this.type,
     }
     if (Object.keys(this.properties).length > 0) {
       result.properties = {}
       Object.entries(this.properties).forEach(([name, schema]: [string, Schema]) => {
-        result.properties[name] = schema.parse()
+        result.properties[name] = schema.parse(level + 1)
       })
     }
     return result
@@ -189,9 +189,10 @@ export class ReferenceSchema extends Schema {
     this.$ref = `#/components/schemas/${ref}`
   }
 
-  parse() {
+  parse(level: number) {
+    if (level === 1) return undefined
     return {
-      ...super.parse(),
+      ...super.parse(level),
       $ref: this.$ref,
     }
   }
@@ -205,10 +206,10 @@ export class AllOfSchema extends Schema {
     this.allOf.push(initial)
   }
 
-  parse() {
+  parse(level: number) {
     return {
-      ...super.parse(),
-      allOf: this.allOf.map((schema: Schema) => schema.parse()),
+      ...super.parse(level),
+      allOf: this.allOf.map((schema: Schema) => schema.parse(level + 1)),
     }
   }
 

@@ -1,6 +1,6 @@
 import { Property } from '@libs/ontouml';
 import { Ontouml2Openapi } from './';
-import {PrimitiveSchema, PrimitiveType, ReferenceSchema} from './types';
+import { ArraySchema, EnumSchema, ObjectSchema, PrimitiveSchema, PrimitiveType, ReferenceSchema } from './types';
 
 const typeMap: Record<string, PrimitiveType> = {
   // boolean
@@ -27,14 +27,33 @@ export function transformAttribute(transformer: Ontouml2Openapi, attribute: Prop
   const schema = transformer.getSchema(attribute.container.name.getText());
   if (!schema) return false;
 
-  if (transformer.getSchema(attribute.name.getText())) {
-    const reference = new ReferenceSchema(attribute.name.getText());
-    schema.addProperty(attribute.name.getText(), reference, false);
-    return true;
+  const attributeSchema = transformer.getSchema(attribute.name.getText());
+  if (attributeSchema) {
+    if (attributeSchema instanceof ObjectSchema){
+      const reference = new ReferenceSchema(attribute.name.getText());
+      schema.addProperty(attribute.name.getText(), reference);
+      return true;
+    } else if (attributeSchema instanceof EnumSchema) {
+      schema.addProperty(attribute.name.getText(), attributeSchema);
+      return true;
+    }
   }
 
-  let type = typeMap[attribute.propertyType.name.getText().toLowerCase()];
+  let typeText = attribute.propertyType.name.getText().toLowerCase();
+  let array = false;
+  if (typeText.includes('[') && typeText.includes(']')) {
+    typeText = typeText.replace('[', '').replace(']', '')
+    array = true;
+  }
+
+  let type = typeMap[typeText];
   if (!type) type = 'string';
+
+  if (array) {
+    const arraySchema = new ArraySchema(new PrimitiveSchema(type));
+    schema.addProperty(attribute.name.getText(), arraySchema);
+    return true;
+  }
 
   schema.addProperty(attribute.name.getText(), new PrimitiveSchema(type));
 

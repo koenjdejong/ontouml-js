@@ -10,16 +10,8 @@ describe('Paths', () => {
     model = project.createModel();
   });
 
-  it('should create paths for kinds', () => {
-
-  });
-
-  it('should not create paths for collectives (abstracts)', () => {
-
-  });
-
-  it('should not create paths for enums', () => {
-
-  });
+  it('should create paths for kinds', () => {});
+  it('should not create paths for collectives (abstracts)', () => {});
+  it('should not create paths for enums', () => {});
+  it('should not create paths for ternary relations', () => {});
 });
-
