@@ -27,7 +27,7 @@ export class OpenAPISchema {
     license?: License,
   }
   servers?: Server[]
-  paths: object = {}
+  paths: { [path: string]: Path }
   components: {
     schemas: {
       [name: string]: Schema,
@@ -50,15 +50,18 @@ export class OpenAPISchema {
   }
 
   parse() {
-    const result: any = {
-      info: this.info,
-      paths: this.paths,
-    }
+    const result: any = { info: this.info }
     if (this.servers?.length) result.servers = this.servers
     if (this.components.schemas) {
       result.components = { schemas: {} }
       Object.entries(this.components.schemas).forEach(([name, schema]: [string, Schema]) => {
         result.components.schemas[name] = schema.parse(1)
+      })
+    }
+    if (Object.keys(this.paths).length > 0) {
+      result.paths = {}
+      Object.entries(this.paths).forEach(([name, path]: [string, Path]) => {
+        result.paths[name] = path.parse()
       })
     }
     return result
@@ -148,7 +151,7 @@ export class ArraySchema extends Schema {
 
   parse(level: number) {
     if (level === 1) return undefined
-    const result = {
+    const result: any = {
       ...super.parse(level),
       type: this.type,
     }
@@ -162,7 +165,7 @@ export class ObjectSchema extends Schema {
   properties: { [name: string]: Schema } = {}
 
   parse(level: number) {
-    const result = {
+    const result: any = {
       ...super.parse(level),
       type: this.type,
     }
@@ -221,6 +224,57 @@ export class AllOfSchema extends Schema {
 
   addSchema(schema: Schema) {
     this.allOf.push(schema)
+  }
+}
+
+export class Path {
+  operators: { [method: string]: Operator }
+
+  constructor() {
+    this.operators = {}
+  }
+
+  parse() {
+    const result: any = {}
+    Object.entries(this.operators).forEach(([method, operator]: [string, Operator]) => {
+      result[method] = operator.parse()
+    })
+    return result
+  }
+
+  addOperator(operator: Operator) {
+    this.operators[operator.type] = operator
+  }
+}
+
+type OperatorType = 'get' | 'post' | 'put' | 'delete'
+export class Operator {
+  type: OperatorType
+  tags: string[]
+  description?: string
+  parameters: Parameter[]
+  requestBody?: Schema
+  responses: { [code: string]: Response }
+
+  constructor(type: OperatorType, name: string, schema: Schema) {
+    this.tags = [name]
+    this.type = type
+    this.responses = {}
+
+    if (schema.description) this.description = schema.description
+  }
+
+  parse() {
+
+    const result: any = {
+      tags: this.tags,
+      operationId: `${this.type}${this.tags[0].charAt(0).toUpperCase() + this.tags[0].slice(1)}`,
+      // parameters: this.parameters.map((parameter: Parameter) => parameter.parse()),
+      responses: this.responses,
+    }
+    if (this.description) result.description = this.description
+    if (this.requestBody) result.requestBody = this.requestBody.parse()
+    return result
   }
 }
 

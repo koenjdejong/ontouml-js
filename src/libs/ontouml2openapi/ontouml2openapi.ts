@@ -7,11 +7,12 @@ import {
   transformAttribute,
   transformRelation,
   transformGeneralization,
-  transformGeneralizationSet
+  transformGeneralizationSet, createPath
 } from './';
 
 import { Service, ServiceIssue } from './..';
-import { OpenAPISchema, Schema } from "./types";
+import {OpenAPISchema, Operator, Path, Schema} from "./types";
+import * as console from "console";
 
 /**
  * Class that transforms OntoUML models to OpenAPI specifications.
@@ -141,14 +142,12 @@ export class Ontouml2Openapi implements Service {
     const schemas = this.result.components.schemas;
 
     Object.entries(schemas).forEach(([name, schema]: [string, Schema]) => {
-      this.createPath(name, schema);
+      createPath(this, name, schema);
     });
   }
 
-  createPath(name: string, schema: Schema) {
-    if (!schema.path) return;
-
-    // TODO
+  addPath(name: string, path: Path) {
+    this.result.paths[name] = path;
   }
 
   run(): { result: OpenAPISchema; issues?: ServiceIssue[] } {
