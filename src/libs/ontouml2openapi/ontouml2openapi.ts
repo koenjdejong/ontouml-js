@@ -11,7 +11,7 @@ import {
 } from './';
 
 import { Service, ServiceIssue } from './..';
-import {OpenAPISchema, Operator, Path, Schema} from "./types";
+import { OpenAPISchema, Path, Schema } from "./types";
 import * as console from "console";
 
 /**
@@ -154,9 +154,19 @@ export class Ontouml2Openapi implements Service {
     this.transform();
     this.createPaths();
 
-    return {
-      result: this.result.parse(),
-      issues: this.getIssues() || null
-    };
+    if (this.options.format === 'YAML') {
+      const yaml = require('js-yaml');
+      console.log(yaml.dump(this.result.parse()));
+      return {
+        result: yaml.dump(this.result.parse()),
+        issues: this.getIssues() || null
+      };
+    } else if (this.options.format === 'JSON') {
+      return {
+        result: this.result.parse(),
+        issues: this.getIssues() || null
+      };
+    }
+    throw new Error('Invalid format');
   }
 }

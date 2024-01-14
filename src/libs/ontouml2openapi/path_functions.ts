@@ -1,7 +1,9 @@
 import { Ontouml2Openapi } from "./";
-import { Path, Operator, Schema } from "./types";
+import {Path, Operator, Schema, ERROR_NAME, Parameter, PrimitiveSchema} from "./types";
 
 export function createPath(transformer: Ontouml2Openapi, name: string, schema: Schema): boolean {
+  if (name === ERROR_NAME) return false;
+
   const multiple = new Path();
   const multipleName = `${name.toLowerCase()}s`;
   multiple.addOperator(new Operator('get', multipleName, schema));
@@ -10,9 +12,16 @@ export function createPath(transformer: Ontouml2Openapi, name: string, schema: S
 
   const single = new Path();
   const singleName = name.toLowerCase()
-  single.addOperator(new Operator('get', singleName, schema));
-  single.addOperator(new Operator('put', singleName, schema));
-  single.addOperator(new Operator('delete', singleName, schema));
+  const get = new Operator('get', singleName, schema);
+  const parameter = new Parameter('id', 'path', new PrimitiveSchema('string'), true, 'The id of the resource');
+  get.addParameter(parameter);
+  single.addOperator(get);
+  const put = new Operator('put', singleName, schema);
+  put.addParameter(parameter);
+  single.addOperator(put);
+  const delete_ = new Operator('delete', singleName, schema);
+  delete_.addParameter(parameter);
+  single.addOperator(delete_);
   transformer.addPath(`/${multipleName}/{id}`, single);
 
   return true;

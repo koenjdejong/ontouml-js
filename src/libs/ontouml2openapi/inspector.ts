@@ -1,7 +1,8 @@
-import {ModelElement, Relation, Package, Class, Property, Generalization, GeneralizationSet} from '@libs/ontouml';
+import { Relation, Class, Property, Generalization, GeneralizationSet } from '@libs/ontouml';
 import { Ontouml2Openapi, Issue } from './';
-import {at} from "lodash";
 
+
+// TODO: implement inspector
 
 export class Inspector {
   transformer: Ontouml2Openapi;
@@ -24,35 +25,9 @@ export class Inspector {
     return this.issues;
   }
 
-  checkClass(_class: Class) {
-    if (!_class.name || !_class.name.getText()) {
-      this.issues.push(Issue.CREATE_MISSING_CLASS_NAME(_class));
-    }
-  }
-
-  checkGeneralization(generalization: Generalization) {
-
-  }
-
-  checkGeneralizationSet(generalizationSet: GeneralizationSet) {
-
-  }
-
-  checkAttribute(attribute: Property) {
-    if (!attribute.name || !attribute.name.getText()) {
-      this.issues.push(Issue.CREATE_MISSING_ATTRIBUTE_NAME(attribute));
-    }
-
-    if (!attribute.propertyType) {
-      this.issues.push(Issue.CREATE_MISSING_ATTRIBUTE_TYPE(attribute));
-    }
-  }
-
-  checkRelation(relation: Relation) {
-    if (!relation.name || !relation.name.getText()) {
-      this.issues.push(Issue.CREATE_MISSING_RELATION_NAME(relation));
-    }
-
-    // relation.properties.forEach(this.checkProperty.bind(this));
-  }
+  checkClass(_class: Class) {}
+  checkGeneralization(generalization: Generalization) {}
+  checkGeneralizationSet(generalizationSet: GeneralizationSet) {}
+  checkAttribute(attribute: Property) {}
+  checkRelation(relation: Relation) {}
 }
