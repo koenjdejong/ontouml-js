@@ -7,7 +7,7 @@ function transformName(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1)
 }
 
-export type PrimitiveType = 'string' | 'number' | 'integer' | 'boolean' | 'null'
+export type PrimitiveType = 'string' | 'number' | 'integer' | 'boolean'
 export type Type = PrimitiveType | 'array' | 'object'
 export type License = {
   name: string,
