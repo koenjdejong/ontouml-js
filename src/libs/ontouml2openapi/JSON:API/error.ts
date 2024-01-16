@@ -1,4 +1,4 @@
-import { Meta } from "./";
+import { Meta } from "./index";
 import { Links } from "./data";
 
 export class JSONAPIError {

@@ -1,4 +1,4 @@
-import { Meta } from './'
+import { Meta } from './index'
 
 export class ResourceObject {
   type: string

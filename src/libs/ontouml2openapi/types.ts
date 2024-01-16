@@ -242,8 +242,9 @@ export class AllOfSchema extends Schema {
   }
 }
 
+type OperatorType = 'get' | 'post' | 'put' | 'delete'
 export class Path {
-  operators: { [method: string]: Operator }
+  operators: { [method: OperatorType]: Operator }
 
   constructor() {
     this.operators = {}
@@ -262,7 +263,6 @@ export class Path {
   }
 }
 
-type OperatorType = 'get' | 'post' | 'put' | 'delete'
 export class Operator {
   type: OperatorType
   tags: string[]
