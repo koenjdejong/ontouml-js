@@ -1,5 +1,5 @@
 import { ServiceOptions } from '@libs/service_options';
-import type {Contact, License, Server} from "@libs/ontouml2openapi/types";
+import type { Contact, License, Server } from './openapi';
 
 type OutputFormat = 'JSON' | 'YAML'
 

@@ -1,6 +1,6 @@
 import { Generalization, GeneralizationSet, Class } from '@libs/ontouml';
 import { Ontouml2Openapi } from './';
-import { EnumSchema, ObjectSchema, Schema } from "@libs/ontouml2openapi/types";
+import { EnumSchema, ObjectSchema, Schema } from "./openapi/schema";
 
 export const transformGeneralizationSet = (transformer: Ontouml2Openapi, set: GeneralizationSet): boolean => {
   if (!set.generalizations || set.generalizations.length === 0) return false;

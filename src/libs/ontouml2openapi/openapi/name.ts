@@ -4,7 +4,7 @@ export class Name {
 
   constructor(single: string, multiple?: string) {
     this._single = single.toLowerCase()
-    this._multiple = multiple.toLowerCase() || `${this._single}s`;
+    this._multiple = multiple?.toLowerCase() || `${this._single}s`;
   }
 
   get single() {

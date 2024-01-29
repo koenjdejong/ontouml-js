@@ -1,6 +1,6 @@
-import {Cardinality, CARDINALITY_MAX_AS_NUMBER, Property, Relation} from '@libs/ontouml';
+import { Cardinality, Property, Relation } from '@libs/ontouml';
 import { Ontouml2Openapi } from './';
-import {ArraySchema, ObjectSchema, ReferenceSchema, Schema} from "@libs/ontouml2openapi/types";
+import { ArraySchema, ObjectSchema, ReferenceSchema, Schema } from "./openapi/schema";
 
 export function transformRelation(transformer: Ontouml2Openapi, relation: Relation): boolean {
   if (relation.isBinary()) return transformBinaryRelation(transformer, relation);

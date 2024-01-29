@@ -15,7 +15,7 @@ describe('Classes', () => {
     person.addDescription('A person in the real world.');
     const result = generateOpenAPI(model);
 
-    expect(result.components.schemas['Person']).toStrictEqual({type: 'object', description: 'A person in the real world.'});
+    expect(result.components.schemas['person']).toStrictEqual({type: 'object', description: 'A person in the real world.'});
   });
 
   it('should transform enumeration correctly', () => {
@@ -52,7 +52,7 @@ describe('Classes', () => {
       model.createClass(name, stereotype);
       const result = generateOpenAPI(model);
 
-      expect(result.components.schemas[name]).toStrictEqual({ type: 'object' });
+      expect(result.components.schemas[name.toLowerCase()]).toStrictEqual({ type: 'object' });
       expect(Object.keys(result.components.schemas).length).toBe(1);
     })
   });
@@ -70,12 +70,13 @@ describe('Classes', () => {
     ];
 
     stereotypes.forEach((stereotype: ClassStereotype) => {
-      model = new Package();
-      model.createClass('Stereotype', stereotype);
-      const result = generateOpenAPI(model);
-
-      expect(result.components.schemas['Stereotype']).toBeUndefined();
-      expect(Object.keys(result.components.schemas).length).toBe(0);
+      try {
+        model = new Package();
+        model.createClass('Stereotype', stereotype);
+        generateOpenAPI(model);
+      } catch (error) {
+        expect(error.message).toBe(`Invalid class type: ${stereotype} for class Stereotype`);
+      }
     });
   });
 });

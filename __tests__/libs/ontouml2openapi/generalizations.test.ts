@@ -1,6 +1,6 @@
 import { generateOpenAPI } from './helpers';
 import { Class, Package, Project } from '@libs/ontouml';
-import { AllOfSchema, ObjectSchema } from "@libs/ontouml2openapi/types";
+import {AllOfSchema, ObjectSchema, ReferenceSchema} from "@libs/ontouml2openapi/openapi/schema";
 
 describe('Generalizations', () => {
   let project: Project;
@@ -21,8 +21,9 @@ describe('Generalizations', () => {
 
     const result = generateOpenAPI(model);
 
-    expect(Object.keys((result.components.schemas['Man'] as AllOfSchema).allOf).length).toBe(2);
-    expect(((result.components.schemas['Man'] as AllOfSchema).allOf[0] as ObjectSchema).properties).toBeDefined();
-    expect(result.components.schemas['Person']).toBeDefined();
+    expect(Object.keys((result.components.schemas['man'] as AllOfSchema).allOf).length).toBe(2);
+    expect(((result.components.schemas['man'] as AllOfSchema).allOf[0] as ObjectSchema).type).toBe('object');
+    expect(((result.components.schemas['man'] as AllOfSchema).allOf[1] as ReferenceSchema).$ref).toBe('#/components/schemas/person');
+    expect(result.components.schemas['person']).toBeDefined();
   });
 });

@@ -1,6 +1,7 @@
 import { Class, ClassStereotype, Literal } from '@libs/ontouml';
 import { Ontouml2Openapi } from './';
-import { EnumSchema, ObjectSchema } from "@libs/ontouml2openapi/types";
+import { EnumSchema, ObjectSchema } from "./openapi/schema";
+import { Name } from "./openapi/name";
 
 enum ClassType {
   SCHEMA = 'schema',
@@ -32,33 +33,36 @@ const classTypeMap = {
 };
 
 export function transformClass(transformer: Ontouml2Openapi, _class: Class): boolean {
+  // Datatypes are transformed as primitive attributes
+  if ([ClassStereotype.DATATYPE].includes(_class.stereotype)) return false;
+
+  const name = new Name(_class.name.getText());
+  const description = _class.description.getText();
+
   const classType = classTypeMap[_class.stereotype];
-  if (!classType) return false;
-
   if (classType === ClassType.SCHEMA) {
-    return transformToSchema(transformer, _class);
+    return transformToSchema(transformer, _class, name, description);
   } else if (classType === ClassType.ENUM) {
-    return transformToEnum(transformer, _class);
+    return transformToEnum(transformer, _class, name, description);
+  } else {
+    throw new Error(`Invalid class type: ${_class.stereotype} for class ${_class.name.getText()}`);
   }
+}
 
+function transformToSchema(transformer: Ontouml2Openapi, _class: Class, name: Name, description: string): boolean {
+  const object = new ObjectSchema({ name, description });
+  // if (transformer.options.addOntoUMLAttributes) {
+  //   object.addOntoUMLAnnotation(_class.id, _class.stereotype, _class.isAbstract, _class.isDerived);
+  // }
+  // if (!_class.isAbstract) {
+  //   object.createPath()
+  // }
+  transformer.addSchema(object);
   return true;
 }
 
-function transformToSchema(transformer: Ontouml2Openapi, _class: Class): boolean {
-  const object = new ObjectSchema()
-  object.description = _class.description.getText();
-  if (transformer.options.addOntoUMLAttributes) {
-    object.addOntoUMLAnnotation(_class.id, _class.stereotype, _class.isAbstract, _class.isDerived);
-  }
-  if (!_class.isAbstract) {
-    object.createPath()
-  }
-  transformer.addSchema(_class.name.getText(), object);
-  return true;
-}
-
-function transformToEnum(transformer: Ontouml2Openapi, _class: Class): boolean {
+function transformToEnum(transformer: Ontouml2Openapi, _class: Class, name: Name, description: string): boolean {
   const literals = _class.literals.map((literal: Literal) => literal.name.getText())
-  transformer.addSchema(_class.name.getText(), new EnumSchema(literals));
+  transformer.addSchema(new EnumSchema( { name, description, enum: literals }));
   return true;
 }

@@ -22,8 +22,8 @@ describe('Paths', () => {
     book.createAttribute(string, 'title');
     model.createBinaryRelation(person, book, 'writes');
     const result = generateOpenAPI(model, { format: 'YAML' });
-
-    console.log(util.inspect(result, false, null, true));
+    console.debug(result)
+    // console.log(util.inspect(result, false, null, true));
   })
 
   it('should create all base paths', () => {

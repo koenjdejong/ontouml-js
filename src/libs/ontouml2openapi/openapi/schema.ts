@@ -12,7 +12,10 @@ export abstract class Schema {
     Object.assign(this, base)
   }
 
-  parse(): { [key: string]: any } { return {} }
+  parse(): { [key: string]: any } {
+    if (this.description) return { description: this.description }
+    return {}
+  }
 }
 
 export class PrimitiveSchema extends Schema {
@@ -99,8 +102,9 @@ export class EnumSchema extends PrimitiveSchema {
 export class ReferenceSchema extends Schema {
   $ref: string
 
-  constructor(base: BaseSchema & { $ref: string }) {
+  constructor(base: BaseSchema) {
     super(base)
+    this.$ref = `#/components/schemas/${base.name.single}`
   }
 
   parse() {
@@ -112,11 +116,16 @@ export class ReferenceSchema extends Schema {
 }
 
 export class AllOfSchema extends Schema {
-  allOf: Schema[]
+  allOf: [ObjectSchema, ...ReferenceSchema[]]
 
   constructor(base: BaseSchema & { objectSchema: ObjectSchema }) {
     super(base)
     this.allOf = [base.objectSchema]
+  }
+
+  addReference(schema: ReferenceSchema): AllOfSchema {
+    this.allOf.push(schema)
+    return this
   }
 
   parse() {

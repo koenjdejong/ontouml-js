@@ -16,6 +16,14 @@ export class Path {
       this.operators.push(new Operation('delete', schema, multiple));
     }
   }
+
+  parse() {
+    const result: any = {};
+    this.operators.forEach((operation: Operation) => {
+      result[operation.name] = operation.parse();
+    });
+    return result;
+  }
 }
 
 type Method = 'get' | 'post' | 'put' | 'delete' | 'options' | 'head' | 'patch' | 'trace';
@@ -41,6 +49,21 @@ export class Operation {
     const response = new Response({ status: '200', schema });
     this.responses.push(response);
   }
+
+  parse() {
+    const result: any = {
+      tags: this.tags,
+      parameters: [],
+      responses: {},
+    };
+    this.parameters.forEach((parameter: Parameter) => {
+      result.parameters.push(parameter.parse());
+    });
+    this.responses.forEach((response: Response) => {
+      result.responses[response.status] = response.parse();
+    });
+    return result;
+  }
 }
 
 export class Parameter {
@@ -53,6 +76,17 @@ export class Parameter {
   constructor(base: { name: Name, in: string, schema: Schema, required: boolean, description?: string }) {
     Object.assign(this, base);
   }
+
+  parse() {
+    const result: any = {
+      name: this.name.single,
+      in: this.in,
+      schema: this.schema.parse(),
+      required: this.required,
+    };
+    if (this.description) result.description = this.description;
+    return result;
+  }
 }
 
 export class Response {
@@ -64,6 +98,18 @@ export class Response {
     Object.assign(this, base);
     this.content['application/json'] = new MediaType({ schema: base.schema });
   }
+
+  parse() {
+    const result: any = {
+      status: this.status,
+      content: {},
+    };
+    if (this.description) result.description = this.description;
+    Object.entries(this.content).forEach(([type, mediaType]: [string, MediaType]) => {
+      result.content[type] = mediaType.parse();
+    });
+    return result;
+  }
 }
 
 export class MediaType {
@@ -71,5 +117,11 @@ export class MediaType {
 
   constructor(base: { schema: Schema }) {
     Object.assign(this, base);
+  }
+
+  parse() {
+    return {
+      schema: this.schema.parse(),
+    };
   }
 }

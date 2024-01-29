@@ -1,5 +1,5 @@
 import { Schema } from './schema';
-import {Operation, Path} from './response';
+import { Path } from './response';
 
 export type License = {
   name: string,
@@ -31,8 +31,22 @@ export class OpenAPISchema {
     schemas: Schema[],
   }
 
+  constructor(title: string, description: string) {
+    this.info = {
+      title,
+      version: '1.0.0',
+    }
+    this.paths = []
+    this.components = {
+      schemas: [],
+    }
+
+    if (description) this.info.description = description
+  }
+
   parse() {
     const result: any = {
+      openapi: '3.0.0',
       info: {
         title: this.info.title,
         version: this.info.version,
@@ -48,14 +62,9 @@ export class OpenAPISchema {
     })
 
     this.paths.forEach((path: Path) => {
-      result.paths[path.name] = {}
-      path.operators.forEach((operation: Operation) => {
-        result.paths[path.name][operation.name] = {
-          tags: operation.tags,
-          parameters: operation.parameters,
-          responses: operation.responses,
-        }
-      })
+      result.paths[path.name] = path.parse()
     })
+
+    return result
   }
 }

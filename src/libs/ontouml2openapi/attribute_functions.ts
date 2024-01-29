@@ -1,6 +1,9 @@
 import { Property } from '@libs/ontouml';
 import { Ontouml2Openapi } from './';
-import { ArraySchema, EnumSchema, ObjectSchema, PrimitiveSchema, PrimitiveType, ReferenceSchema } from './types';
+import { ArraySchema, EnumSchema, ObjectSchema, PrimitiveSchema, ReferenceSchema, PrimitiveType } from './openapi/schema';
+import { Name } from "./openapi/name";
+
+// TODO attributes that special types are also transformed (date, email, etc)
 
 const typeMap: Record<string, PrimitiveType> = {
   // boolean
@@ -20,10 +23,11 @@ const typeMap: Record<string, PrimitiveType> = {
   'char': 'string',
   'character': 'string',
   'text': 'string',
-  // TODO date
 };
 
 export function transformAttribute(transformer: Ontouml2Openapi, attribute: Property): boolean {
+  const name = new Name(attribute.name.getText());
+
   const schema = transformer.getSchema(attribute.container.name.getText());
   if (!schema) return false;
 

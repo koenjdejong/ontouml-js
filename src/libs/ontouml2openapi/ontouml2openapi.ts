@@ -11,8 +11,9 @@ import {
 } from './';
 
 import { Service, ServiceIssue } from './..';
-import { OpenAPISchema, Path, Schema } from "./types";
-import * as console from "console";
+import { OpenAPISchema } from "./openapi";
+import { Schema } from "./openapi/schema";
+import { Path } from "./openapi/response";
 
 /**
  * Class that transforms OntoUML models to OpenAPI specifications.
@@ -24,7 +25,9 @@ export class Ontouml2Openapi implements Service {
   model: Package;
   options: Ontouml2OpenapiOptions;
   inspector: Inspector;
-  result: OpenAPISchema;
+
+  paths: Path[] = [];
+  schemas: Schema[] = [];
 
   constructor(project: Project, options?: Partial<Ontouml2OpenapiOptions>);
   constructor(model: Package, options?: Partial<Ontouml2OpenapiOptions>);
@@ -60,13 +63,11 @@ export class Ontouml2Openapi implements Service {
     }
 
     try {
-      this.initialize();
-
       this.transformClasses();
       this.transformGeneralizations();
       this.transformGeneralizationSets();
-      this.transformAttributes();
-      this.transformRelations();
+      // this.transformAttributes();
+      // this.transformRelations();
     } catch (error) {
       console.log(error);
       console.log('An error occurred while transforming the model to OpenAPI.');
@@ -74,51 +75,11 @@ export class Ontouml2Openapi implements Service {
     }
   }
 
-  initialize() {
-    this.result = new OpenAPISchema(
-      this.model.name.getText(),
-      this.model.description.getText(),
-      this.options,
-    );
-  }
-
-  getSchema(name?: string): Schema | undefined {
-    if (!name) return undefined;
-    return this.result.components.schemas[name];
-  }
-
-  addSchema(name: string, schema: Schema) {
-    this.result.components.schemas = {
-      ...this.result.components.schemas,
-      [name]: schema,
-    };
-  }
-
-  removeSchema(name: string) {
-    delete this.result.components.schemas[name];
-  }
-
   transformClasses() {
     const classes = this.model.getAllClasses();
 
     for (const _class of classes) {
       transformClass(this, _class);
-    }
-  }
-
-  transformAttributes() {
-    const attributes = this.model.getAllAttributes();
-
-    for (const attribute of attributes) {
-      transformAttribute(this, attribute);
-    }
-  }
-
-  transformRelations() {
-    const relations = this.model.getAllRelations();
-
-    for (const relation of relations) {
-      transformRelation(this, relation);
     }
   }
 
@@ -138,32 +99,65 @@ export class Ontouml2Openapi implements Service {
     }
   }
 
-  createPaths() {
-    const schemas = this.result.components.schemas;
+  transformAttributes() {
+    const attributes = this.model.getAllAttributes();
 
-    Object.entries(schemas).forEach(([name, schema]: [string, Schema]) => {
+    for (const attribute of attributes) {
+      transformAttribute(this, attribute);
+    }
+  }
+
+  transformRelations() {
+    const relations = this.model.getAllRelations();
+
+    for (const relation of relations) {
+      transformRelation(this, relation);
+    }
+  }
+
+  createPaths() {
+    Object.entries(this.schemas).forEach(([name, schema]: [string, Schema]) => {
       createPath(this, name, schema);
     });
   }
 
-  addPath(name: string, path: Path) {
-    this.result.paths[name] = path;
+  getSchema(name?: string): Schema | undefined {
+    if (!name) return undefined;
+
+    name = name.toLowerCase();
+    return this.schemas.find((schema: Schema) => schema.name.single === name);
+  }
+
+  addSchema(schema: Schema) {
+    this.schemas.push(schema);
+  }
+
+  removeSchema(name: string) {
+    this.schemas = this.schemas.filter((schema: Schema) => schema.name.single !== name);
+  }
+
+  addPath(path: Path) {
+    this.paths.push(path);
   }
 
   run(): { result: OpenAPISchema; issues?: ServiceIssue[] } {
     this.transform();
     this.createPaths();
 
+    const result = new OpenAPISchema(this.model.name.getText(), this.model.description.getText());
+    result.components.schemas = this.schemas;
+    result.paths = this.paths;
+
+    const parse_result = result.parse();
     if (this.options.format === 'YAML') {
       const yaml = require('js-yaml');
-      console.log(yaml.dump(this.result.parse()));
       return {
-        result: yaml.dump(this.result.parse()),
+        result: yaml.dump(parse_result),
         issues: this.getIssues() || null
       };
     } else if (this.options.format === 'JSON') {
       return {
-        result: this.result.parse(),
+        result: parse_result,
         issues: this.getIssues() || null
       };
     }

@@ -2,7 +2,7 @@ import { ResourceObject, Links } from "./data";
 import { JSONAPIError } from './error'
 
 export class Meta {
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export class JSONAPI {
